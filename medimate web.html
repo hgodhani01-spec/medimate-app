@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MediMate – Medicine Reminder</title>
+<style>
+  :root{
+    --bg:#eef7f5; --card:#ffffff; --text:#12332e; --muted:#5f7a76;
+    --brand:#14a38b; --brand-dark:#0e7f6c; --line:#dcebe8; --chip:#e6f6f2;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#0d1b19; --card:#142825; --text:#e6f4f1; --muted:#9bb5b0;
+      --brand:#22c3a8; --brand-dark:#14a38b; --line:#22403b; --chip:#1a3834;
+    }
+  }
+  *{box-sizing:border-box;margin:0}
+  body{
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    background:var(--bg); color:var(--text);
+    min-height:100vh; display:flex; align-items:center; justify-content:center;
+    padding:20px;
+  }
+  .card{
+    position:relative; width:100%; max-width:340px; background:var(--card);
+    border:1px solid var(--line); border-radius:22px;
+    padding:26px 22px 20px; text-align:center;
+    box-shadow:0 10px 30px rgba(20,163,139,.12);
+  }
+  .logo{
+    width:64px; height:64px; margin:0 auto 12px; border-radius:18px;
+    background:linear-gradient(135deg,var(--brand),var(--brand-dark));
+    display:grid; place-items:center;
+  }
+  h1{font-size:1.5rem; letter-spacing:-.3px}
+  .tag{color:var(--muted); font-size:.92rem; margin-top:4px}
+  .chips{display:flex; gap:6px; justify-content:center; flex-wrap:wrap; margin:14px 0 18px}
+  .chips span{
+    background:var(--chip); color:var(--brand-dark); font-size:.75rem;
+    padding:4px 10px; border-radius:99px; font-weight:600;
+  }
+  @media (prefers-color-scheme: dark){ .chips span{color:var(--brand)} }
+  .btn{
+    display:flex; align-items:center; justify-content:center; gap:8px;
+    background:var(--brand); color:#fff; text-decoration:none;
+    padding:13px; border-radius:14px; font-weight:700; font-size:1rem;
+    transition:transform .15s, background .15s;
+  }
+  .btn:hover{background:var(--brand-dark)}
+  .btn:active{transform:scale(.97)}
+  .note{font-size:.72rem; color:var(--muted); margin-top:8px}
+  .about{
+    margin-top:18px; padding-top:14px; border-top:1px dashed var(--line);
+    font-size:.78rem; color:var(--muted); line-height:1.5;
+  }
+  .about b{color:var(--text)}
+  .team{list-style:none; padding:0; margin-top:8px; text-align:left}
+  .team li{
+    display:flex; justify-content:space-between; gap:8px;
+    padding:4px 0; font-size:.74rem;
+  }
+  .team li span:last-child{font-variant-numeric:tabular-nums; opacity:.85}
+
+  .menu-btn{position:absolute; top:12px; right:12px; width:36px; height:36px; border-radius:10px;
+    border:1px solid var(--line); background:var(--card); color:var(--text); cursor:pointer; display:grid; place-items:center}
+  .menu-list{position:absolute; top:52px; right:12px; min-width:150px; padding:6px; z-index:5; display:none;
+    background:var(--card); border:1px solid var(--line); border-radius:12px; box-shadow:0 8px 20px rgba(0,0,0,.14)}
+  .menu-list.open{display:block}
+  .menu-list button,.menu-list a{display:block; width:100%; padding:9px 10px; border:0; background:none; color:var(--text);
+    font:inherit; font-size:.88rem; text-align:left; border-radius:8px; cursor:pointer; text-decoration:none}
+  .menu-list button:hover,.menu-list a:hover{background:var(--chip)}
+  dialog{width:min(92vw,320px); margin:auto; padding:20px; border:1px solid var(--line); border-radius:18px;
+    background:var(--card); color:var(--text)}
+  dialog::backdrop{background:rgba(0,0,0,.4)}
+  dialog h2{font-size:1.1rem; margin-bottom:12px}
+  dialog label{display:block; font-size:.78rem; color:var(--muted); margin:10px 0 4px}
+  dialog input,dialog textarea{width:100%; padding:9px 10px; font:inherit; font-size:.9rem; color:var(--text);
+    background:var(--bg); border:1px solid var(--line); border-radius:10px}
+  dialog textarea{resize:vertical; min-height:80px}
+  .stars{display:flex; gap:2px}
+  .stars button{border:0; background:none; font-size:1.6rem; cursor:pointer; color:var(--line); padding:0 2px}
+  .stars button.on{color:#f5b301}
+  .row{display:flex; gap:8px; margin-top:14px}
+  .row button{flex:1; padding:10px; border-radius:10px; font:inherit; font-weight:700; cursor:pointer;
+    border:1px solid var(--line); background:var(--card); color:var(--text)}
+  .row .send{background:var(--brand); border-color:var(--brand); color:#fff}
+</style>
+</head>
+<body>
+  <main class="card">
+    <button class="menu-btn" id="menuBtn" aria-label="Menu" aria-expanded="false">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+    <div class="menu-list" id="menuList">
+      <a href="medimate.apk" download="MediMate.apk">Download APK</a>
+      <button type="button" id="openFeedback">Feedback</button>
+    </div>
+    <div class="logo">
+      <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <rect x="3" y="9" width="18" height="6" rx="3" transform="rotate(-35 12 12)"/>
+        <path d="M9.5 8.5l6 6" transform="rotate(0 12 12)"/>
+      </svg>
+    </div>
+
+    <h1>MediMate</h1>
+    <p class="tag">Never miss your medicine time.</p>
+
+    <div class="chips">
+      <span>⏰ Alarms</span>
+      <span>💊 Reminders</span>
+      <span>Android</span>
+    </div>
+
+    <a class="btn" href="medimate-app.apk" download="MediMate-app.apk">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0l-5-5m5 5l5-5M4 20h16"/></svg>
+      Download APK
+    </a>
+    <p class="note">v1.0 · Allow “Install unknown apps” to install</p>
+
+    <section class="about">
+      <p><b>Product Ideation</b> project · <b>GCET</b></p>
+      <ul class="team">
+        <li><span>12502040501029</span><span>Dhruvil Panchal</span></li>
+        <li><span>12502040501036</span><span>Het Godhani</span></li>
+        <li><span>12502040501038</span><span>Harshrajsinh Parmar</span></li>
+        <li><span>12502040501041</span><span>Het Maniya</span></li>
+      </ul>
+    </section>
+  </main>
+
+  <dialog id="fb">
+    <form id="fbForm">
+      <h2>Send feedback</h2>
+      <label for="fbName">Your name</label>
+      <input id="fbName" required maxlength="40">
+      <label>Rating</label>
+      <div class="stars" id="stars">
+        <button type="button" data-v="1">★</button><button type="button" data-v="2">★</button><button type="button" data-v="3">★</button><button type="button" data-v="4">★</button><button type="button" data-v="5">★</button>
+      </div>
+      <label for="fbMsg">Message</label>
+      <textarea id="fbMsg" required maxlength="500"></textarea>
+      <div class="row">
+        <button type="button" id="fbCancel">Cancel</button>
+        <button type="submit" class="send">Send</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script>
+    // Change this to your own email: feedback will open as a ready email to this address
+    var FEEDBACK_EMAIL = "gcet123@gmail.com";
+
+    var menuBtn = document.getElementById("menuBtn");
+    var menuList = document.getElementById("menuList");
+    var fb = document.getElementById("fb");
+    var rating = 0;
+
+    function toggleMenu(open){
+      menuList.classList.toggle("open", open);
+      menuBtn.setAttribute("aria-expanded", open);
+    }
+    menuBtn.addEventListener("click", function(e){
+      e.stopPropagation();
+      toggleMenu(!menuList.classList.contains("open"));
+    });
+    document.addEventListener("click", function(){ toggleMenu(false); });
+
+    document.getElementById("openFeedback").addEventListener("click", function(){
+      toggleMenu(false);
+      fb.showModal();
+    });
+    document.getElementById("fbCancel").addEventListener("click", function(){ fb.close(); });
+
+    var stars = document.querySelectorAll("#stars button");
+    stars.forEach(function(b){
+      b.addEventListener("click", function(){
+        rating = +b.dataset.v;
+        stars.forEach(function(x){ x.classList.toggle("on", +x.dataset.v <= rating); });
+      });
+    });
+
+    document.getElementById("fbForm").addEventListener("submit", function(e){
+      e.preventDefault();
+      var body = "Name: " + document.getElementById("fbName").value +
+                 "\nRating: " + (rating || "not given") + "/5" +
+                 "\n\n" + document.getElementById("fbMsg").value;
+      window.location.href = "mailto:" + FEEDBACK_EMAIL +
+        "?subject=" + encodeURIComponent("MediMate feedback") +
+        "&body=" + encodeURIComponent(body);
+      fb.close();
+    });
+  </script>
+</body>
+</html>
